@@ -51,3 +51,5 @@ disallow_untyped_calls = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
+# Default norecursedirs skips any "build" dir, which would hide tests/build.
+norecursedirs = [".*", "*.egg", "dist", "node_modules", "venv"]
