@@ -1,0 +1,281 @@
+{
+  "brief": "# Brief: Jazz Pharmaceuticals - board discussion materials\n\nAudience: Jazz Pharmaceuticals board of directors (pre-read and live discussion).\n\nPurpose: assess whether Jazz is undervalued relative to specialty-pharma peers and frame\nstrategic alternatives, including a potential sale at a control premium.\n\nMust cover:\n1. Executive summary with the key conclusions.\n2. Company overview: business description and key statistics.\n3. Historical financial summary (last three fiscal years): revenue, growth, EBITDA, margin,\n   net income.\n4. Trading comparables against specialty-pharma peers of similar scale.\n5. Valuation summary (football field) across trading comps, precedent transactions,\n   DCF and premiums paid, against the current share price.\n\nData: SEC 10-K XBRL for Jazz and peers; market data and valuation ranges from the\nanalyst's input sheet (inputs.xlsx). Public-company data only.\n",
+  "template": {
+    "pptx": "../../templates/jazz_pitch_book.pptx",
+    "style": "../../out/jazz_pitch_book/style.json",
+    "layouts": "../../out/jazz_pitch_book/layouts.json"
+  },
+  "facts": "facts.json",
+  "slides": [
+    {
+      "slide_type": "title",
+      "title": "Project Jaguar",
+      "subtitle": "Discussion Materials for the Board of Directors"
+    },
+    {
+      "slide_type": "exec_summary",
+      "title": "Executive Summary",
+      "bullets": [
+        "Jazz generated revenue of {{jazz.revenue.fy2025|currency:billions:1}} in FY2025, up {{jazz.revenue_growth.fy2025|percent:1}} year over year",
+        "EBITDA margin reached {{jazz.ebitda_margin.fy2025|percent:1}} in FY2025",
+        "Jazz trades at {{jazz.ev_ebitda.ltm|multiple:1}} LTM EBITDA versus specialty-pharma peers",
+        "Precedent transactions and premiums paid indicate value above the current share price",
+        "We recommend evaluating a targeted outreach to the most likely strategic partners"
+      ]
+    },
+    {
+      "slide_type": "company_overview",
+      "title": "Jazz Pharmaceuticals at a Glance",
+      "description": "Jazz Pharmaceuticals is a global biopharmaceutical company focused on neuroscience and oncology, with commercial products in sleep medicine, epilepsy and hematologic malignancies.",
+      "highlights": [
+        "FY2025 revenue of {{jazz.revenue.fy2025|currency:billions:1}}",
+        "FY2025 EBITDA margin of {{jazz.ebitda_margin.fy2025|percent:1}}"
+      ],
+      "key_stats": [
+        {
+          "label": "Share price",
+          "fact": "jazz.share_price.current",
+          "format": {
+            "kind": "per_share",
+            "decimals": 2
+          }
+        },
+        {
+          "label": "Market capitalization ($m)",
+          "fact": "jazz.market_cap.current",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          }
+        },
+        {
+          "label": "FY2025 revenue ($m)",
+          "fact": "jazz.revenue.fy2025",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          }
+        },
+        {
+          "label": "FY2025 EBITDA ($m)",
+          "fact": "jazz.ebitda.fy2025",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          }
+        },
+        {
+          "label": "EV / LTM EBITDA",
+          "fact": "jazz.ev_ebitda.ltm",
+          "format": {
+            "kind": "multiple"
+          }
+        }
+      ]
+    },
+    {
+      "slide_type": "financial_table",
+      "title": "Jazz Financial Summary",
+      "columns": [
+        "FY 2023",
+        "FY 2024",
+        "FY 2025"
+      ],
+      "rows": [
+        {
+          "label": "Revenue",
+          "cells": [
+            "jazz.revenue.fy2023",
+            "jazz.revenue.fy2024",
+            "jazz.revenue.fy2025"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          }
+        },
+        {
+          "label": "% Growth",
+          "cells": [
+            "jazz.revenue_growth.fy2023",
+            "jazz.revenue_growth.fy2024",
+            "jazz.revenue_growth.fy2025"
+          ],
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          },
+          "style": "memo"
+        },
+        {
+          "label": "EBITDA",
+          "cells": [
+            "jazz.ebitda.fy2023",
+            "jazz.ebitda.fy2024",
+            "jazz.ebitda.fy2025"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          },
+          "style": "subtotal"
+        },
+        {
+          "label": "% Margin",
+          "cells": [
+            "jazz.ebitda_margin.fy2023",
+            "jazz.ebitda_margin.fy2024",
+            "jazz.ebitda_margin.fy2025"
+          ],
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          },
+          "style": "memo",
+          "ratio_of": [
+            "EBITDA",
+            "Revenue"
+          ]
+        },
+        {
+          "label": "Net Income",
+          "cells": [
+            "jazz.net_income.fy2023",
+            "jazz.net_income.fy2024",
+            "jazz.net_income.fy2025"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          },
+          "style": "total"
+        }
+      ]
+    },
+    {
+      "slide_type": "trading_comps",
+      "title": "Comparable Public Companies",
+      "subtitle": "Specialty and rare-disease pharmaceutical peers of similar scale.",
+      "columns": [
+        {
+          "header": "FY2025 revenue ($m)",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          }
+        },
+        {
+          "header": "Revenue growth",
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          }
+        },
+        {
+          "header": "EBITDA margin",
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          }
+        },
+        {
+          "header": "EV / LTM EBITDA",
+          "format": {
+            "kind": "multiple"
+          }
+        }
+      ],
+      "rows": [
+        {
+          "company": "Neurocrine Biosciences",
+          "cells": [
+            "nbix.revenue.fy2025",
+            "nbix.revenue_growth.fy2025",
+            "nbix.ebitda_margin.fy2025",
+            "nbix.ev_ebitda.ltm"
+          ]
+        },
+        {
+          "company": "Alkermes",
+          "cells": [
+            "alks.revenue.fy2025",
+            "alks.revenue_growth.fy2025",
+            "alks.ebitda_margin.fy2025",
+            "alks.ev_ebitda.ltm"
+          ]
+        },
+        {
+          "company": "Incyte",
+          "cells": [
+            "incy.revenue.fy2025",
+            "incy.revenue_growth.fy2025",
+            "incy.ebitda_margin.fy2025",
+            "incy.ev_ebitda.ltm"
+          ]
+        },
+        {
+          "company": "United Therapeutics",
+          "cells": [
+            "uthr.revenue.fy2025",
+            "uthr.revenue_growth.fy2025",
+            "uthr.ebitda_margin.fy2025",
+            "uthr.ev_ebitda.ltm"
+          ]
+        },
+        {
+          "company": "BioMarin Pharmaceutical",
+          "cells": [
+            "bmrn.revenue.fy2025",
+            "bmrn.revenue_growth.fy2025",
+            "bmrn.ebitda_margin.fy2025",
+            "bmrn.ev_ebitda.ltm"
+          ]
+        },
+        {
+          "company": "Jazz Pharmaceuticals",
+          "is_target": true,
+          "cells": [
+            "jazz.revenue.fy2025",
+            "jazz.revenue_growth.fy2025",
+            "jazz.ebitda_margin.fy2025",
+            "jazz.ev_ebitda.ltm"
+          ]
+        }
+      ]
+    },
+    {
+      "slide_type": "football_field",
+      "title": "Valuation Summary",
+      "reference": "jazz.share_price.current",
+      "bars": [
+        {
+          "label": "Trading comparables",
+          "low": "jazz.val_comps.low",
+          "high": "jazz.val_comps.high"
+        },
+        {
+          "label": "Precedent transactions",
+          "low": "jazz.val_precedents.low",
+          "high": "jazz.val_precedents.high"
+        },
+        {
+          "label": "DCF (management case)",
+          "low": "jazz.val_dcf.low",
+          "high": "jazz.val_dcf.high"
+        },
+        {
+          "label": "Premiums paid",
+          "low": "jazz.val_premiums.low",
+          "high": "jazz.val_premiums.high"
+        }
+      ]
+    }
+  ]
+}

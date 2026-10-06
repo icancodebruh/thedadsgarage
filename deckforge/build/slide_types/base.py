@@ -1,23 +1,29 @@
-"""Slide-type plugin interface and shared drawing helpers."""
+"""Slide-type plugin interface, build context, and shared drawing helpers."""
 
 from __future__ import annotations
 
 import copy
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import Any, Protocol, cast
 
+from lxml import etree
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.oxml.ns import qn
 from pptx.shapes.autoshape import Shape
 from pptx.shapes.base import BaseShape
 from pptx.slide import Slide, SlideLayout
-from pptx.text.text import TextFrame, _Run
+from pptx.text.text import TextFrame, _Paragraph, _Run
 from pptx.util import Emu, Inches, Pt
 
+from deckforge.build.formatting import FACT_TOKEN, format_fact, format_value, parse_token
+from deckforge.build.manifest import Binding, Manifest
 from deckforge.build.style_tokens import StyleTokens, TextToken
-from deckforge.ingest.models import FactSet
+from deckforge.ingest.models import FactSet, Unit
+from deckforge.spec.models import NumberFormat
 from deckforge.template.models import Box
 from deckforge.template.ooxml import first, xpath
 
@@ -25,11 +31,74 @@ from deckforge.template.ooxml import first, xpath
 class LayoutOverflowError(ValueError):
     """Content does not fit the space the template allows."""
 
+    def __init__(self, message: str, slide: int, max_rows: int | None = None) -> None:
+        super().__init__(message)
+        self.slide = slide
+        self.max_rows = max_rows  # body rows that would fit, when known
 
-@dataclass(frozen=True)
+
+class LayoutMismatchError(ValueError):
+    """The chosen layout lacks a placeholder this slide type needs."""
+
+
+def _fmt_key(fmt: NumberFormat) -> str:
+    return f"{fmt.kind.value}/{fmt.scale.value}/{fmt.decimals}"
+
+
+@dataclass
 class BuildContext:
+    """Shared state for one build. Every number goes through `number`/`derived`/`text`."""
+
     tokens: StyleTokens
     facts: FactSet
+    manifest: Manifest = field(default_factory=Manifest)
+    slide_number: int = 0
+
+    def number(self, fact_id: str, fmt: NumberFormat, *, inline: bool = False) -> str:
+        fact = self.facts.get(fact_id)
+        text = format_fact(fact, fmt, inline=inline)
+        self.manifest.bindings.append(
+            Binding(
+                slide=self.slide_number,
+                text=text,
+                fact_ids=[fact.id],
+                source_refs=[fact.source_ref],
+                format_key=_fmt_key(fmt),
+            )
+        )
+        return text
+
+    def derived(
+        self, value: Decimal, unit: Unit, fmt: NumberFormat, fact_ids: list[str], how: str
+    ) -> str:
+        """A value computed from facts (e.g. a peer median); sources are the inputs'."""
+        text = format_value(value, unit, fmt)
+        sources = sorted({f.source_ref for f in self.facts.require(fact_ids)})
+        self.manifest.bindings.append(
+            Binding(
+                slide=self.slide_number,
+                text=text,
+                fact_ids=fact_ids,
+                source_refs=sources,
+                derived=how,
+                format_key=_fmt_key(fmt),
+            )
+        )
+        return text
+
+    def text(self, template: str) -> str:
+        """Render `{{fact|fmt}}` tokens in running text."""
+
+        def sub(match: Any) -> str:
+            fact_id, fmt = parse_token(match)
+            return self.number(fact_id, fmt, inline=True)
+
+        return FACT_TOKEN.sub(sub, template)
+
+    def sources_on_slide(self) -> list[str]:
+        return sorted(
+            {s for b in self.manifest.for_slide(self.slide_number) for s in b.source_refs}
+        )
 
 
 class SlideType(Protocol):
@@ -38,6 +107,9 @@ class SlideType(Protocol):
     slide_type: str
 
     def render(self, slide: Slide, spec: Any, ctx: BuildContext) -> None: ...
+
+
+# --- placeholders -----------------------------------------------------------------------
 
 
 def placeholders(slide: Slide | SlideLayout) -> list[BaseShape]:
@@ -50,6 +122,13 @@ def find_placeholder(slide: Slide, *types: PP_PLACEHOLDER) -> Shape | None:
         if ph.placeholder_format.type in types and isinstance(ph, Shape):
             return ph
     return None
+
+
+def set_title(slide: Slide, title: str, layout_id: str) -> None:
+    ph = find_placeholder(slide, PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE)
+    if ph is None:
+        raise LayoutMismatchError(f"layout '{layout_id}' has no title placeholder")
+    ph.text_frame.text = title
 
 
 def add_slide_number(slide: Slide) -> bool:
@@ -90,6 +169,18 @@ def remove_empty_placeholders(slide: Slide) -> None:
             remove_shape(ph)
 
 
+def place(shape: BaseShape, box: Box) -> None:
+    shape.left, shape.top = Inches(box.x), Inches(box.y)
+    shape.width, shape.height = Inches(box.w), Inches(box.h)
+
+
+# --- text -------------------------------------------------------------------------------
+
+
+def line_height_in(size_pt: float, factor: float = 1.4) -> float:
+    return size_pt * factor / 72
+
+
 def style_run(
     run: _Run, token: TextToken, *, bold: bool | None = None, color: str | None = None
 ) -> None:
@@ -106,18 +197,108 @@ def set_paragraphs(frame: TextFrame, lines: list[str]) -> None:
         frame.add_paragraph().text = line  # type: ignore[no-untyped-call]
 
 
+def _zero_margins(frame: TextFrame) -> None:
+    for side in ("margin_left", "margin_right", "margin_top", "margin_bottom"):
+        setattr(frame, side, Emu(0))
+
+
+BULLET_INDENT_IN = 0.18
+
+
+def set_bullet(paragraph: _Paragraph, char: str = "\u2022") -> None:
+    """Give a paragraph a real hanging bullet (never a typed bullet character)."""
+    p_pr = paragraph._p.get_or_add_pPr()
+    p_pr.set("marL", str(Inches(BULLET_INDENT_IN)))
+    p_pr.set("indent", str(-Inches(BULLET_INDENT_IN)))
+    bullet = etree.SubElement(p_pr, qn("a:buChar"))
+    bullet.set("char", char)
+
+
 def add_text(
-    slide: Slide, box: Box, text: str, token: TextToken, align: PP_ALIGN = PP_ALIGN.LEFT
+    slide: Slide,
+    box: Box,
+    text: str | list[str],
+    token: TextToken,
+    *,
+    align: PP_ALIGN = PP_ALIGN.LEFT,
+    bold: bool | None = None,
+    color: str | None = None,
+    fill: str | None = None,
+    anchor: MSO_ANCHOR = MSO_ANCHOR.TOP,
+    pad_in: float = 0.0,
+    bullets_from: int | None = None,
 ) -> Shape:
+    """A text box styled from tokens; a list renders one paragraph per item."""
     shape = slide.shapes.add_textbox(Inches(box.x), Inches(box.y), Inches(box.w), Inches(box.h))
     frame = shape.text_frame
     frame.word_wrap = True
-    frame.vertical_anchor = MSO_ANCHOR.TOP
-    for side in ("margin_left", "margin_right", "margin_top", "margin_bottom"):
-        setattr(frame, side, Emu(0))
-    paragraph = frame.paragraphs[0]
-    paragraph.alignment = align
-    run = paragraph.add_run()
-    run.text = text
-    style_run(run, token)
+    frame.vertical_anchor = anchor
+    _zero_margins(frame)
+    if pad_in:
+        frame.margin_left = frame.margin_right = Inches(pad_in)
+    if fill:
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = RGBColor.from_string(fill)  # type: ignore[no-untyped-call]
+    lines = [text] if isinstance(text, str) else text
+    for i, line in enumerate(lines):
+        paragraph = frame.paragraphs[0] if i == 0 else frame.add_paragraph()
+        paragraph.alignment = align
+        if bullets_from is not None and i >= bullets_from:
+            set_bullet(paragraph)
+        if i:
+            paragraph.space_before = Pt(token.size_pt * 0.5)
+        run = paragraph.add_run()
+        run.text = line
+        style_run(run, token, bold=bold, color=color)
     return shape
+
+
+def section_header(slide: Slide, box: Box, text: str, tokens: StyleTokens) -> Shape:
+    """A filled header bar (template header fill + contrasting text)."""
+    return add_text(
+        slide,
+        box,
+        text,
+        tokens.table,
+        bold=True,
+        color=tokens.header_text,
+        fill=tokens.header_fill,
+        anchor=MSO_ANCHOR.MIDDLE,
+        pad_in=0.08,
+    )
+
+
+# --- data-slide frame -------------------------------------------------------------------
+
+GAP_IN = 0.1
+
+
+def data_frame(slide: Slide, ctx: BuildContext, units: str | None) -> Box:
+    """Draw the units line; return the body box left between it and the footnote zone.
+
+    Call `source_footnote` after the body is rendered, so it lists the sources used.
+    """
+    cb = ctx.tokens.content_box
+    top = cb.y
+    if units:
+        line_h = line_height_in(ctx.tokens.footnote.size_pt)
+        add_text(slide, Box(x=cb.x, y=cb.y, w=cb.w, h=line_h), units, ctx.tokens.footnote)
+        top += line_h + GAP_IN
+    bottom = cb.y + cb.h - footnote_height(ctx) - GAP_IN
+    return Box(x=cb.x, y=round(top, 3), w=cb.w, h=round(bottom - top, 3))
+
+
+def footnote_height(ctx: BuildContext) -> float:
+    return line_height_in(ctx.tokens.footnote.size_pt) * 2
+
+
+def source_footnote(slide: Slide, ctx: BuildContext, extra: list[str] | None = None) -> None:
+    sources = ctx.sources_on_slide()
+    if not sources:
+        return
+    cb = ctx.tokens.content_box
+    h = footnote_height(ctx)
+    lines = ["Source: " + "; ".join(sources), *(extra or [])]
+    add_text(
+        slide, Box(x=cb.x, y=cb.y + cb.h - h, w=cb.w, h=h), " ".join(lines), ctx.tokens.footnote
+    )

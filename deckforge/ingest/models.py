@@ -68,6 +68,23 @@ class FactSet(BaseModel):
             raise MissingFactError(missing)
         return [index[i] for i in fact_ids]
 
+    def merge(self, *others: FactSet) -> FactSet:
+        """Combine fact sets; the same id with a different value is a conflict."""
+        index = {f.id: f for f in self.facts}
+        for other in others:
+            for fact in other.facts:
+                existing = index.get(fact.id)
+                if existing is not None and existing.value != fact.value:
+                    raise ValueError(
+                        f"conflicting values for '{fact.id}': {existing.value} "
+                        f"({existing.source_ref}) vs {fact.value} ({fact.source_ref})"
+                    )
+                index.setdefault(fact.id, fact)
+        return FactSet(facts=sorted(index.values(), key=lambda f: f.id))
+
+    def dump(self, path: Path) -> None:
+        path.write_text(self.model_dump_json(indent=2) + "\n", encoding="utf-8")
+
     @classmethod
     def load(cls, path: Path) -> FactSet:
         return cls.model_validate_json(path.read_text(encoding="utf-8"))

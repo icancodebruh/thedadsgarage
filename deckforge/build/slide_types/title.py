@@ -7,26 +7,20 @@ from pptx.slide import Slide
 
 from deckforge.build.slide_types.base import (
     BuildContext,
+    LayoutMismatchError,
     find_placeholder,
     remove_empty_placeholders,
     set_paragraphs,
+    set_title,
 )
 from deckforge.spec.models import TitleSlide
-
-
-class LayoutMismatchError(ValueError):
-    """The chosen layout lacks a placeholder this slide type needs."""
 
 
 class TitleSlideType:
     slide_type = "title"
 
     def render(self, slide: Slide, spec: TitleSlide, ctx: BuildContext) -> None:
-        title = find_placeholder(slide, PP_PLACEHOLDER.CENTER_TITLE, PP_PLACEHOLDER.TITLE)
-        if title is None:
-            raise LayoutMismatchError(f"layout '{spec.layout_id}' has no title placeholder")
-        title.text_frame.text = spec.title
-
+        set_title(slide, spec.title, spec.layout_id)
         lines = [s for s in (spec.subtitle, _format_date(spec)) if s]
         if lines:
             sub = find_placeholder(slide, PP_PLACEHOLDER.SUBTITLE, PP_PLACEHOLDER.BODY)

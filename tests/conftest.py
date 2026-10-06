@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from typing import Any, TypeVar
 
 import pytest
 from PIL import Image
@@ -12,8 +13,11 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Inches, Pt
+from pydantic import BaseModel
 
 from deckforge.template.analyze import analyze_template, write_outputs
+
+T = TypeVar("T", bound=BaseModel)
 
 NAVY = RGBColor.from_string("113D63")
 GREY = RGBColor.from_string("CCD1D7")
@@ -132,3 +136,143 @@ def deck_inputs(reference_deck: Path, tmp_path: Path) -> Path:
     }
     write_json(tmp_path / "deck_spec.json", spec)
     return tmp_path
+
+
+FULL_FACTS = {
+    # id: (entity, metric, period, value, unit)
+    "testco.revenue.fy2024": ("Testco", "revenue", "FY2024", "1000000000", "USD"),
+    "testco.revenue.fy2025": ("Testco", "revenue", "FY2025", "1250000000", "USD"),
+    "testco.cogs.fy2025": ("Testco", "cogs", "FY2025", "-500000000", "USD"),
+    "testco.gross_profit.fy2025": ("Testco", "gross_profit", "FY2025", "750000000", "USD"),
+    "testco.gross_margin.fy2025": ("Testco", "gross_margin", "FY2025", "0.6", "percent"),
+    "testco.share_price.current": ("Testco", "share_price", "current", "42.5", "USD_per_share"),
+    "testco.ev_ebitda.ltm": ("Testco", "ev_ebitda", "LTM", "9.5", "ratio"),
+    "peera.ev_ebitda.ltm": ("Peer A", "ev_ebitda", "LTM", "10", "ratio"),
+    "peerb.ev_ebitda.ltm": ("Peer B", "ev_ebitda", "LTM", "12", "ratio"),
+    "peerc.ev_ebitda.ltm": ("Peer C", "ev_ebitda", "LTM", "17", "ratio"),
+    "testco.val_dcf.low": ("Testco", "val_dcf_low", "current", "38", "USD_per_share"),
+    "testco.val_dcf.high": ("Testco", "val_dcf_high", "current", "51", "USD_per_share"),
+    "testco.val_comps.low": ("Testco", "val_comps_low", "current", "40", "USD_per_share"),
+    "testco.val_comps.high": ("Testco", "val_comps_high", "current", "47", "USD_per_share"),
+}
+
+
+@pytest.fixture
+def full_inputs(reference_deck: Path, tmp_path: Path) -> Path:
+    """A spec directory exercising all six slide types (synthetic test data)."""
+    style, library = analyze_template(reference_deck)
+    write_outputs(style, library, tmp_path)
+    shutil.copy(reference_deck, tmp_path / "template.pptx")
+    facts = [
+        {
+            "id": i,
+            "entity": e,
+            "metric": m,
+            "period": p,
+            "value": v,
+            "unit": u,
+            "source_ref": TEST_SOURCE,
+        }
+        for i, (e, m, p, v, u) in FULL_FACTS.items()
+    ]
+    write_json(tmp_path / "facts.json", {"facts": facts})
+    usd = {"kind": "currency", "scale": "millions", "decimals": 1}
+    mult = {"kind": "multiple"}
+    spec = {
+        "brief": "Test deck with every slide type",
+        "template": {"pptx": "template.pptx", "style": "style.json", "layouts": "layouts.json"},
+        "facts": "facts.json",
+        "slides": [
+            {"slide_type": "title", "title": "Project Testco", "date": "2026-10-06"},
+            {
+                "slide_type": "exec_summary",
+                "title": "Executive Summary",
+                "bullets": [
+                    "Revenue reached {{testco.revenue.fy2025|currency:billions:2}} in FY2025",
+                    "Testco trades at {{testco.ev_ebitda.ltm|multiple:1}} LTM EBITDA",
+                ],
+            },
+            {
+                "slide_type": "company_overview",
+                "title": "Testco at a Glance",
+                "description": "Testco makes test fixtures.",
+                "highlights": ["Gross margin of {{testco.gross_margin.fy2025|percent:1}}"],
+                "key_stats": [
+                    {
+                        "label": "Share price",
+                        "fact": "testco.share_price.current",
+                        "format": {"kind": "per_share", "decimals": 2},
+                    }
+                ],
+            },
+            {
+                "slide_type": "financial_table",
+                "title": "Testco Financial Summary",
+                "columns": ["FY 2025"],
+                "rows": [
+                    {"label": "Revenue", "cells": ["testco.revenue.fy2025"], "format": usd},
+                    {"label": "COGS", "cells": ["testco.cogs.fy2025"], "format": usd},
+                    {
+                        "label": "Gross Profit",
+                        "cells": ["testco.gross_profit.fy2025"],
+                        "format": usd,
+                        "style": "total",
+                        "sum_of": ["Revenue", "COGS"],
+                    },
+                    {
+                        "label": "% Margin",
+                        "cells": ["testco.gross_margin.fy2025"],
+                        "format": {"kind": "percent"},
+                        "style": "memo",
+                        "ratio_of": ["Gross Profit", "Revenue"],
+                    },
+                ],
+            },
+            {
+                "slide_type": "trading_comps",
+                "title": "Comparable Companies",
+                "columns": [{"header": "EV / EBITDA", "format": mult}],
+                "rows": [
+                    {"company": "Peer A", "cells": ["peera.ev_ebitda.ltm"]},
+                    {"company": "Peer B", "cells": ["peerb.ev_ebitda.ltm"]},
+                    {"company": "Peer C", "cells": ["peerc.ev_ebitda.ltm"]},
+                    {"company": "Testco", "cells": ["testco.ev_ebitda.ltm"], "is_target": True},
+                ],
+            },
+            {
+                "slide_type": "football_field",
+                "title": "Valuation Summary",
+                "reference": "testco.share_price.current",
+                "bars": [
+                    {"label": "DCF", "low": "testco.val_dcf.low", "high": "testco.val_dcf.high"},
+                    {
+                        "label": "Comps",
+                        "low": "testco.val_comps.low",
+                        "high": "testco.val_comps.high",
+                    },
+                ],
+            },
+        ],
+    }
+    write_json(tmp_path / "deck_spec.json", spec)
+    return tmp_path
+
+
+def build_full(inputs: Path) -> Path:
+    from deckforge.build.renderer import build_deck
+    from deckforge.spec.models import DeckSpec
+
+    return build_deck(DeckSpec.load(inputs / "deck_spec.json"), inputs, inputs / "deck.pptx")
+
+
+class FakeLLM:
+    """Returns queued structured answers in order and records what it was asked."""
+
+    def __init__(self, *answers: object) -> None:
+        self.answers = list(answers)
+        self.calls: list[dict[str, Any]] = []
+
+    def structured(self, *, system: str, content: list[dict[str, Any]], schema: type[T]) -> T:
+        self.calls.append({"system": system, "content": content, "schema": schema})
+        answer = self.answers.pop(0)
+        return schema.model_validate(answer) if isinstance(answer, dict) else answer  # type: ignore[return-value]

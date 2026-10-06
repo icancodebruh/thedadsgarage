@@ -11,11 +11,12 @@ import pptx
 from pptx.presentation import Presentation
 from pptx.slide import SlideLayout
 
+from deckforge.build.manifest import Manifest
 from deckforge.build.slide_types import REGISTRY
 from deckforge.build.slide_types.base import BuildContext, add_slide_number
 from deckforge.build.style_tokens import derive_tokens
 from deckforge.ingest.models import FactSet
-from deckforge.spec.models import DeckSpec, FinancialTableSlide
+from deckforge.spec.models import DeckSpec
 from deckforge.template.layouts import layout_ids
 from deckforge.template.models import LayoutLibrary, StyleSpec
 
@@ -71,6 +72,14 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def manifest_path(deck: Path) -> Path:
+    return deck.with_suffix(".manifest.json")
+
+
+def load_manifest(deck: Path) -> Manifest:
+    return Manifest.load(manifest_path(deck))
+
+
 def build_deck(spec: DeckSpec, base_dir: Path, out_path: Path) -> Path:
     template = base_dir / spec.template.pptx
     style = StyleSpec.model_validate_json((base_dir / spec.template.style).read_text("utf-8"))
@@ -86,9 +95,7 @@ def build_deck(spec: DeckSpec, base_dir: Path, out_path: Path) -> Path:
     if bad:
         raise SpecError(f"unknown layout_id(s) {bad}; layouts.json has {sorted(known)}")
     # Report every missing number before building anything.
-    facts.require(
-        [r for s in spec.slides if isinstance(s, FinancialTableSlide) for r in s.fact_refs()]
-    )
+    facts.require(spec.fact_refs())
 
     prs = pptx.Presentation(str(template))
     _clear_slides(prs)
@@ -97,6 +104,7 @@ def build_deck(spec: DeckSpec, base_dir: Path, out_path: Path) -> Path:
     numbered = numbered_layouts(library)
     for n, slide_spec in enumerate(spec.slides, start=1):
         slide = prs.slides.add_slide(layouts[slide_spec.layout_id])
+        ctx.slide_number = n
         REGISTRY[slide_spec.slide_type].render(slide, slide_spec, ctx)
         if slide_spec.layout_id in numbered:
             add_slide_number(slide)
@@ -105,5 +113,6 @@ def build_deck(spec: DeckSpec, base_dir: Path, out_path: Path) -> Path:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(out_path))
     _normalize_zip(out_path)
+    ctx.manifest.dump(manifest_path(out_path))
     log.info("deck built", extra={"path": str(out_path), "slides": len(spec.slides)})
     return out_path

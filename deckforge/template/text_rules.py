@@ -52,3 +52,28 @@ def infer_text_rules(titles: Iterable[str]) -> TextRules:
     return TextRules(
         title_case=rule, title_case_confidence=confidence, title_trailing_period=trailing
     )
+
+
+def _is_acronym(word: str) -> bool:
+    return any(c.isupper() for c in word[1:]) or word.isupper()
+
+
+def to_title_case(title: str) -> str:
+    """Capitalise significant words; keep minor words lower and acronyms as written."""
+    words = title.split(" ")
+    out: list[str] = []
+    for i, word in enumerate(words):
+        core = word.strip("(\"'")
+        if not core or _is_acronym(core) or not core[0].isalpha():
+            out.append(word)
+        elif i > 0 and core.lower() in MINOR_WORDS and not words[i - 1].endswith(":"):
+            out.append(word.lower())
+        else:
+            out.append(word.replace(core, core[0].upper() + core[1:], 1))
+    return " ".join(out)
+
+
+def to_sentence_case(title: str) -> str:
+    """Lower-case every word except the first and acronyms (proper nouns need review)."""
+    words = title.split(" ")
+    return " ".join(w if i == 0 or _is_acronym(w) else w.lower() for i, w in enumerate(words))

@@ -20,3 +20,6 @@ out/
 # Third-party decks stay local; add a self-made one explicitly with `git add -f`.
 templates/*.pptx
 templates/*.potx
+
+# Generated facts (rebuild with `deckforge ingest`)
+examples/*/facts*.json
