@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+!deckforge/build/
+
+# Secrets
+.env
+.env.*
+
+# Generated outputs
+out/
+
+# Reference decks: only commit self-made templates (see CLAUDE.md data policy).
+# Third-party decks stay local; add a self-made one explicitly with `git add -f`.
+templates/*.pptx
+templates/*.potx
