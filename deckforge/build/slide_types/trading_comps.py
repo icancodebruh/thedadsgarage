@@ -11,24 +11,26 @@ from deckforge.build.formatting import DASH, units_label
 from deckforge.build.slide_types.base import (
     BuildContext,
     data_frame,
+    footnote_text,
     remove_empty_placeholders,
     set_title,
-    source_footnote,
 )
+from deckforge.build.slide_types.financial_table import render_cell
 from deckforge.build.tables import RowModel, draw_table
-from deckforge.spec.models import CompsRow, FormatKind, RowStyle, Statistic, TradingCompsSlide
+from deckforge.spec.models import (
+    LITERAL_CELLS,
+    CompsRow,
+    FormatKind,
+    RowStyle,
+    Statistic,
+    TradingCompsSlide,
+)
 
-LABEL_COL_SHARE = 0.28
-STAT_LABELS: dict[Statistic, str] = {
-    "median": "Median",
-    "mean": "Mean",
-    "high": "High",
-    "low": "Low",
-}
+LABEL_COL_SHARE = 0.26
 
 
 class CompsError(ValueError):
-    """A comps column mixes units, so statistics cannot be computed."""
+    """A comps column mixes units across the peers used for statistics."""
 
 
 def _stat(name: Statistic, values: list[Decimal]) -> Decimal:
@@ -45,12 +47,10 @@ class TradingCompsSlideType:
     def render(self, slide: Slide, spec: TradingCompsSlide, ctx: BuildContext) -> None:
         set_title(slide, spec.title, spec.layout_id)
         remove_empty_placeholders(slide)
-        currency = next(
-            (c.format for c in spec.columns if c.format.kind is FormatKind.CURRENCY), None
-        )
-        units = spec.units_label or (units_label(currency) if currency else None)
-        lines = " ".join(x for x in (spec.subtitle, units) if x) or None
-        body = data_frame(slide, ctx, lines)
+        units = spec.units_label or self._units(spec, ctx)
+        subtitle = ctx.text(spec.subtitle) if spec.subtitle else None
+        lines = " ".join(x for x in (subtitle, units) if x) or None
+        body = data_frame(slide, ctx, lines, footnote_text(ctx, spec.fact_refs(), spec.footnote))
 
         peers = [self._row(r, spec, ctx) for r in spec.rows if not r.is_target]
         targets = [self._row(r, spec, ctx) for r in spec.rows if r.is_target]
@@ -65,11 +65,20 @@ class TradingCompsSlideType:
             slide_number=ctx.slide_number,
             what=f"'{spec.title}'",
         )
-        source_footnote(slide, ctx)
+
+    def _units(self, spec: TradingCompsSlide, ctx: BuildContext) -> str | None:
+        for i, col in enumerate(spec.columns):
+            if col.format.kind is FormatKind.CURRENCY and not col.format.symbol:
+                ref = next(
+                    (c for r in spec.rows if (c := r.cells[i]) and c not in LITERAL_CELLS), None
+                )
+                if ref:
+                    return units_label(col.format, ctx.facts.get(ref).unit)
+        return None
 
     def _row(self, row: CompsRow, spec: TradingCompsSlide, ctx: BuildContext) -> RowModel:
         cells = [
-            ctx.number(ref, col.format) if ref else DASH
+            render_cell(ref, col.format, ctx)
             for ref, col in zip(row.cells, spec.columns, strict=True)
         ]
         return RowModel(
@@ -77,12 +86,16 @@ class TradingCompsSlideType:
         )
 
     def _stats(self, spec: TradingCompsSlide, ctx: BuildContext) -> list[RowModel]:
-        peers = [r for r in spec.rows if not r.is_target]
+        peers = [r for r in spec.rows if not r.is_target and r.in_stats]
         out: list[RowModel] = []
         for name in spec.statistics:
             cells: list[str] = []
             for i, col in enumerate(spec.columns):
-                facts = ctx.facts.require([ref for r in peers if (ref := r.cells[i])])
+                refs = [ref for r in peers if (ref := r.cells[i]) and ref not in LITERAL_CELLS]
+                if not col.stats:
+                    cells.append("")
+                    continue
+                facts = ctx.facts.require(refs)
                 if not facts:
                     cells.append(DASH)
                     continue
@@ -99,5 +112,6 @@ class TradingCompsSlideType:
                         f"{name} of {len(facts)} peers",
                     )
                 )
-            out.append(RowModel([STAT_LABELS[name], *cells], RowStyle.SUBTOTAL))
+            label = f"{spec.stats_label} {name}" if spec.stats_label else name.title()
+            out.append(RowModel([label, *cells], RowStyle.SUBTOTAL))
         return out

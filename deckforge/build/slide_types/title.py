@@ -21,7 +21,8 @@ class TitleSlideType:
 
     def render(self, slide: Slide, spec: TitleSlide, ctx: BuildContext) -> None:
         set_title(slide, spec.title, spec.layout_id)
-        lines = [s for s in (spec.subtitle, _format_date(spec)) if s]
+        lines = [*(spec.subtitle or "").splitlines(), _format_date(spec) or ""]
+        lines = [line for line in lines if line.strip()]
         if lines:
             sub = find_placeholder(slide, PP_PLACEHOLDER.SUBTITLE, PP_PLACEHOLDER.BODY)
             if sub is None:

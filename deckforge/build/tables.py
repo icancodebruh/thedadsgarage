@@ -45,6 +45,7 @@ def draw_table(
     label_share: float,
     slide_number: int,
     what: str,
+    value_align: PP_ALIGN = PP_ALIGN.RIGHT,
 ) -> GraphicFrame:
     """Draw a table at the top of `box`; raise if it cannot fit its height."""
     n_rows = len(rows) + (1 if header else 0)
@@ -100,7 +101,7 @@ def draw_table(
                 bold=bold,
                 fill=fill,
                 indent=indent,
-                align=PP_ALIGN.LEFT if c == 0 else PP_ALIGN.RIGHT,
+                align=PP_ALIGN.LEFT if c == 0 else value_align,
             )
     return frame
 

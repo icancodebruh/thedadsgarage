@@ -41,7 +41,7 @@ def test_units_and_source_footnote(deck_inputs: Path, tmp_path: Path) -> None:
         s.text_frame.text for s in Presentation(str(deck)).slides[1].shapes if s.has_text_frame
     }
     assert "($ USD in Millions)" in texts
-    assert f"Source: {TEST_SOURCE}" in texts
+    assert f"Source: {TEST_SOURCE}." in texts
 
 
 def test_overflow_raises(deck_inputs: Path, tmp_path: Path) -> None:

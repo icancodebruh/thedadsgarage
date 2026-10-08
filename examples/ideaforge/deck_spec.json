@@ -1,0 +1,475 @@
+{
+  "brief": "# Brief: ideaForge Technology - company profile\n\nAudience: investors and deal teams reading a pre-read on ideaForge Technology Ltd.\n(NSE: IDEAFORGE, BSE: 543932), India's dual-use drone maker.\n\nPurpose: rebuild the existing ideaForge company profile in the house pitch-book template,\nkeeping its storyline: FY26 turnaround delivered; valuation now hinges on converting the\nMinistry of Defence pipeline.\n\nMust cover:\n1. Key takeaways (turnaround, FY27 start, recapitalisation, demand tailwinds, valuation split).\n2. Company overview: what ideaForge does, key facts, platform portfolio, revenue mix.\n3. Financial summary FY23-FY26, Q1 FY26, Q1 FY27 and LTM to Jun-26.\n4. Trading comparables vs Indian defence-electronics peers, with AeroVironment as a global anchor.\n5. Valuation football field vs the current price and the QIP price.\n\nData: every figure comes from ideaForge_Company_Profile.pptx, which cites company filings,\nexchange filings and stockanalysis.com. Public-company data only. Not investment advice.\n",
+  "template": {
+    "pptx": "../../templates/jazz_pitch_book.pptx",
+    "style": "../../out/jazz_pitch_book/style.json",
+    "layouts": "../../out/jazz_pitch_book/layouts.json"
+  },
+  "facts": "facts.json",
+  "glossary": [
+    "543932",
+    "Q4i",
+    "Q6 V2 GEO",
+    "Q6 V2",
+    "NETRA V4 PRO",
+    "NETRA 5",
+    "SWITCH V2",
+    "TRL 6",
+    "52-week",
+    "DFPDS-2026",
+    "ideaForge",
+    "medevac",
+    "defence-electronics",
+    "DRONEII",
+    "SINE",
+    "GoI",
+    "RDI",
+    "ISR"
+  ],
+  "slides": [
+    {
+      "slide_type": "title",
+      "title": "ideaForge Technology Ltd.",
+      "subtitle": "Company Profile  |  NSE: IDEAFORGE  ·  BSE: 543932\nPrepared from public filings and market data. Not investment advice.",
+      "date": "2026-10-08"
+    },
+    {
+      "slide_type": "exec_summary",
+      "title": "FY26 Turnaround Delivered; MoD Pipeline Is Next",
+      "bullets": [
+        "Turnaround year: FY26 revenue of {{ideaforge.revenue.fy26|currency:millions:1}}, up {{ideaforge.revenue_growth.fy26|percent:1}}, with EBITDA of {{ideaforge.ebitda.fy26|currency:millions:1}} against {{ideaforge.ebitda.fy25|currency:millions:1}} in FY25; record Q4 FY26 revenue of {{ideaforge.revenue.q4fy26|currency:millions:1}}",
+        "Steady start to FY27: Q1 FY27 revenue of {{ideaforge.revenue.q1fy27|currency:millions:1}}, up {{ideaforge.revenue_growth.q1fy27|percent:1}} year-on-year, and EBITDA of {{ideaforge.ebitda.q1fy27|currency:millions:1}}; more than {{ideaforge.order_book_executed_share.q1fy27|percent:0}} of the opening order book executed, leaving {{ideaforge.order_book.jun26|currency:millions:1}} at 30-Jun-26",
+        "Recapitalised for growth: a {{ideaforge.qip_proceeds.jul26|currency:millions:1}} QIP at {{ideaforge.qip_price.jul26|per_share:units:2}} per share (Jul-26), plus {{ideaforge.rdi_funding.fy27|currency:millions:1}} of low-cost funding under the GoI RDI scheme for the YETI logistics UAV",
+        "Demand tailwinds: the MoD plans {{india_mod.drone_procurement_fast_track.plan|currency:billions:0}} of drone procurement via Fast Track; the DAC approved {{india_dac.capital_acquisitions.approved|currency:billions:0}} of capital acquisitions, including kamikaze and naval drones",
+        "Valuation split: at {{ideaforge.share_price.06_oct_26|per_share:units:2}} the stock trades at {{ideaforge.ev_revenue_ltm.ltm|multiple:1}} EV/LTM revenue, a {{ideaforge.ev_revenue_discount_to_indian_median.ltm|percent:1}} discount to Indian peers, but at {{ideaforge.ev_ebitda_ltm.ltm|multiple:1}} EV/LTM EBITDA excluding other income"
+      ]
+    },
+    {
+      "slide_type": "company_overview",
+      "title": "A Fully Indigenous Dual-Use Drone OEM",
+      "left_heading": "Business Overview",
+      "right_heading": "Key Facts",
+      "description": "ideaForge designs and builds dual-use drones on a fully indigenous stack: autopilot, radio and data links, EO/IR payloads, GNSS-denied navigation and ground software are developed in-house, with more than {{ideaforge.tech_workforce_share.fy27|percent:0}} of the workforce in technology and product development.",
+      "highlights": [
+        "Quadcopters: Q4i, Q6 V2 and Q6 V2 GEO (DGCA type-certified) for surveillance and mapping; NETRA V4 PRO and NETRA 5 for defence and public-safety ISR",
+        "SWITCH and SWITCH V2 VTOL fixed-wing hybrids for border security; ZOLT tactical UAV in series production",
+        "YETI logistics UAV (TRL 6) for {{ideaforge_yeti.payload_min_kg.trl6|number:units:0}}–{{ideaforge_yeti.payload_max_kg.trl6|number:units:0}} kg cargo and medevac",
+        "Q1 FY27 revenue mix: defence {{ideaforge.revenue_mix_defence.q1fy27|percent:0}}, civil {{ideaforge.revenue_mix_civil.q1fy27|percent:0}}"
+      ],
+      "key_stats": [
+        {
+          "label": "Incorporated",
+          "text": "2007; incubated at SINE, IIT Bombay"
+        },
+        {
+          "label": "Headquarters",
+          "text": "Navi Mumbai, Maharashtra"
+        },
+        {
+          "label": "Listing",
+          "text": "NSE / BSE (2023)"
+        },
+        {
+          "label": "Leadership",
+          "text": "Ankit Mehta (CEO, co-founder); Vipul Joshi (CFO)"
+        },
+        {
+          "label": "Global rank",
+          "text": "#{{ideaforge.dual_use_drone_rank.dec24|number:units:0}} in dual-use drones (DRONEII, Dec-24)"
+        },
+        {
+          "label": "Field record",
+          "text": "{{ideaforge.customer_missions.jul26|number:units:0}}+ customer missions (Jul-26)"
+        },
+        {
+          "label": "Patents",
+          "text": "{{ideaforge.patents_total.jun26|number:units:0}}: {{ideaforge.patents_granted.jun26|number:units:0}} granted, {{ideaforge.patents_pending.jun26|number:units:0}} pending (Jun-26)"
+        },
+        {
+          "label": "Shares out",
+          "text": "{{ideaforge.shares_outstanding.post_qip|number:millions:2}} post-QIP"
+        },
+        {
+          "label": "Share price",
+          "fact": "ideaforge.share_price.06_oct_26",
+          "format": {
+            "kind": "per_share",
+            "decimals": 2
+          }
+        },
+        {
+          "label": "Market cap (₹m)",
+          "fact": "ideaforge.market_cap.ltm",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          }
+        }
+      ]
+    },
+    {
+      "slide_type": "financial_table",
+      "title": "Revenue Recovered in FY26 with Positive EBITDA",
+      "columns": [
+        "FY23",
+        "FY24",
+        "FY25",
+        "FY26",
+        "Q1 FY26",
+        "Q1 FY27",
+        "LTM"
+      ],
+      "rows": [
+        {
+          "label": "Revenue from operations",
+          "cells": [
+            "ideaforge.revenue.fy23",
+            "ideaforge.revenue.fy24",
+            "ideaforge.revenue.fy25",
+            "ideaforge.revenue.fy26",
+            "ideaforge.revenue.q1fy26",
+            "ideaforge.revenue.q1fy27",
+            "ideaforge.revenue.ltm_jun26"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          },
+          "style": "normal"
+        },
+        {
+          "label": "Growth (YoY)",
+          "cells": [
+            null,
+            "ideaforge.revenue_growth.fy24",
+            "ideaforge.revenue_growth.fy25",
+            "ideaforge.revenue_growth.fy26",
+            "ideaforge.revenue_growth.q1fy26",
+            "ideaforge.revenue_growth.q1fy27",
+            null
+          ],
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          },
+          "style": "memo"
+        },
+        {
+          "label": "Gross profit",
+          "cells": [
+            "ideaforge.gross_profit.fy23",
+            "ideaforge.gross_profit.fy24",
+            "ideaforge.gross_profit.fy25",
+            "ideaforge.gross_profit.fy26",
+            "ideaforge.gross_profit.q1fy26",
+            "ideaforge.gross_profit.q1fy27",
+            "ideaforge.gross_profit.ltm_jun26"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          },
+          "style": "subtotal"
+        },
+        {
+          "label": "Gross margin",
+          "cells": [
+            "ideaforge.gross_margin.fy23",
+            "ideaforge.gross_margin.fy24",
+            "ideaforge.gross_margin.fy25",
+            "ideaforge.gross_margin.fy26",
+            "ideaforge.gross_margin.q1fy26",
+            "ideaforge.gross_margin.q1fy27",
+            "ideaforge.gross_margin.ltm_jun26"
+          ],
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          },
+          "style": "memo",
+          "ratio_of": [
+            "Gross profit",
+            "Revenue from operations"
+          ]
+        },
+        {
+          "label": "o/w other income",
+          "cells": [
+            "n.a.",
+            "n.a.",
+            "n.a.",
+            "ideaforge.other_income.fy26",
+            "ideaforge.other_income.q1fy26",
+            "ideaforge.other_income.q1fy27",
+            "ideaforge.other_income.ltm_jun26"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          },
+          "style": "memo"
+        },
+        {
+          "label": "EBITDA (company-reported)",
+          "cells": [
+            "ideaforge.ebitda.fy23",
+            "ideaforge.ebitda.fy24",
+            "ideaforge.ebitda.fy25",
+            "ideaforge.ebitda.fy26",
+            "ideaforge.ebitda.q1fy26",
+            "ideaforge.ebitda.q1fy27",
+            "ideaforge.ebitda.ltm_jun26"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          },
+          "style": "subtotal"
+        },
+        {
+          "label": "EBITDA margin",
+          "cells": [
+            "ideaforge.ebitda_margin.fy23",
+            "ideaforge.ebitda_margin.fy24",
+            "ideaforge.ebitda_margin.fy25",
+            "ideaforge.ebitda_margin.fy26",
+            "ideaforge.ebitda_margin.q1fy26",
+            "ideaforge.ebitda_margin.q1fy27",
+            "ideaforge.ebitda_margin.ltm_jun26"
+          ],
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          },
+          "style": "memo",
+          "ratio_of": [
+            "EBITDA (company-reported)",
+            "Revenue from operations"
+          ]
+        },
+        {
+          "label": "PAT",
+          "cells": [
+            "ideaforge.pat.fy23",
+            "ideaforge.pat.fy24",
+            "ideaforge.pat.fy25",
+            "ideaforge.pat.fy26",
+            "ideaforge.pat.q1fy26",
+            "ideaforge.pat.q1fy27",
+            "ideaforge.pat.ltm_jun26"
+          ],
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1
+          },
+          "style": "total"
+        },
+        {
+          "label": "PAT margin",
+          "cells": [
+            "ideaforge.pat_margin.fy23",
+            "ideaforge.pat_margin.fy24",
+            "ideaforge.pat_margin.fy25",
+            "ideaforge.pat_margin.fy26",
+            "ideaforge.pat_margin.q1fy26",
+            "ideaforge.pat_margin.q1fy27",
+            "ideaforge.pat_margin.ltm_jun26"
+          ],
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          },
+          "style": "memo",
+          "ratio_of": [
+            "PAT",
+            "Revenue from operations"
+          ]
+        }
+      ],
+      "footnote": "FY26 = 9M FY26 + Q4 FY26. LTM = Q2 FY26–Q1 FY27. Company-reported EBITDA includes other income. Q1 FY26 growth is against Q1 FY25 revenue of {{ideaforge.revenue.q1fy25|currency:millions:1}}. n.a. = not disclosed in the sources used."
+    },
+    {
+      "slide_type": "trading_comps",
+      "title": "Discount on EV/Revenue, Premium on EV/EBITDA",
+      "subtitle": "Indian defence-electronics peers, with AeroVironment (US) as a global anchor; ideaForge EBITDA excludes {{ideaforge.other_income.ltm_jun26|currency:millions:1}} of other income.",
+      "columns": [
+        {
+          "header": "Mkt cap (m)",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1,
+            "symbol": true
+          },
+          "stats": false
+        },
+        {
+          "header": "EV (m)",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1,
+            "symbol": true
+          },
+          "stats": false
+        },
+        {
+          "header": "LTM revenue (m)",
+          "format": {
+            "kind": "currency",
+            "scale": "millions",
+            "decimals": 1,
+            "symbol": true
+          },
+          "stats": false
+        },
+        {
+          "header": "EBITDA margin",
+          "format": {
+            "kind": "percent",
+            "decimals": 1
+          }
+        },
+        {
+          "header": "EV / revenue",
+          "format": {
+            "kind": "multiple",
+            "decimals": 1
+          }
+        },
+        {
+          "header": "EV / EBITDA",
+          "format": {
+            "kind": "multiple",
+            "decimals": 1
+          }
+        },
+        {
+          "header": "P / E",
+          "format": {
+            "kind": "multiple",
+            "decimals": 1
+          }
+        }
+      ],
+      "rows": [
+        {
+          "company": "Paras Defence",
+          "is_target": false,
+          "in_stats": true,
+          "cells": [
+            "parasdefence.market_cap.ltm",
+            "parasdefence.ev.ltm",
+            "parasdefence.revenue_ltm.ltm",
+            "parasdefence.ebitda_margin_ltm.ltm",
+            "parasdefence.ev_revenue_ltm.ltm",
+            "parasdefence.ev_ebitda_ltm.ltm",
+            "parasdefence.pe_ltm.ltm"
+          ]
+        },
+        {
+          "company": "Data Patterns",
+          "is_target": false,
+          "in_stats": true,
+          "cells": [
+            "datapatterns.market_cap.ltm",
+            "datapatterns.ev.ltm",
+            "datapatterns.revenue_ltm.ltm",
+            "datapatterns.ebitda_margin_ltm.ltm",
+            "datapatterns.ev_revenue_ltm.ltm",
+            "datapatterns.ev_ebitda_ltm.ltm",
+            "datapatterns.pe_ltm.ltm"
+          ]
+        },
+        {
+          "company": "Zen Technologies",
+          "is_target": false,
+          "in_stats": true,
+          "cells": [
+            "zentech.market_cap.ltm",
+            "zentech.ev.ltm",
+            "zentech.revenue_ltm.ltm",
+            "zentech.ebitda_margin_ltm.ltm",
+            "zentech.ev_revenue_ltm.ltm",
+            "zentech.ev_ebitda_ltm.ltm",
+            "zentech.pe_ltm.ltm"
+          ]
+        },
+        {
+          "company": "AeroVironment (US)",
+          "is_target": false,
+          "in_stats": false,
+          "cells": [
+            "aerovironment.market_cap.ltm",
+            "aerovironment.ev.ltm",
+            "aerovironment.revenue_ltm.ltm",
+            "aerovironment.ebitda_margin_ltm.ltm",
+            "aerovironment.ev_revenue_ltm.ltm",
+            "aerovironment.ev_ebitda_ltm.ltm",
+            "NM"
+          ]
+        },
+        {
+          "company": "ideaForge",
+          "is_target": true,
+          "in_stats": true,
+          "cells": [
+            "ideaforge.market_cap.ltm",
+            "ideaforge.ev.ltm",
+            "ideaforge.revenue.ltm_jun26",
+            "ideaforge.ebitda_margin_ltm.ltm",
+            "ideaforge.ev_revenue_ltm.ltm",
+            "ideaforge.ev_ebitda_ltm.ltm",
+            "NM"
+          ]
+        }
+      ],
+      "statistics": [
+        "median"
+      ],
+      "stats_label": "Indian peer",
+      "footnote": "Peer LTM to latest reported quarter; peer EBITDA = operating income + D&A. ideaForge EV = market cap less pro forma net cash of {{ideaforge.net_cash_pro_forma.31_mar_26_plus_qip|currency:millions:1}} (31-Mar-26 balance sheet plus gross QIP proceeds). Price dates: Paras Defence 15-Sep-26, Data Patterns 10-Sep-26, Zen Technologies 17-Sep-26, AeroVironment 07-Oct-26, ideaForge 06-Oct-26. NM = not meaningful."
+    },
+    {
+      "slide_type": "football_field",
+      "title": "Price Sits Between EBITDA- and Revenue-Implied Values",
+      "format": {
+        "kind": "per_share",
+        "decimals": 2
+      },
+      "reference": "ideaforge.share_price.06_oct_26",
+      "reference_label": "Current price",
+      "more_references": [
+        {
+          "label": "QIP price",
+          "fact": "ideaforge.qip_price.jul26"
+        }
+      ],
+      "bars": [
+        {
+          "label": "52-week trading range (NSE)",
+          "low": "ideaforge.implied_value_trading_52w_low.06_oct_26",
+          "high": "ideaforge.implied_value_trading_52w_high.06_oct_26"
+        },
+        {
+          "label": "EV / LTM revenue ({{zentech.ev_revenue_ltm.ltm|multiple:1}}–{{datapatterns.ev_revenue_ltm.ltm|multiple:1}})",
+          "low": "ideaforge.implied_value_ev_revenue_low.06_oct_26",
+          "high": "ideaforge.implied_value_ev_revenue_high.06_oct_26"
+        },
+        {
+          "label": "EV / LTM EBITDA ex-other income ({{zentech.ev_ebitda_ltm.ltm|multiple:1}}–{{parasdefence.ev_ebitda_ltm.ltm|multiple:1}})",
+          "low": "ideaforge.implied_value_ev_ebitda_low.06_oct_26",
+          "high": "ideaforge.implied_value_ev_ebitda_high.06_oct_26"
+        }
+      ],
+      "footnote": "Implied price = (peer multiple × ideaForge LTM metric + pro forma net cash of {{ideaforge.net_cash_pro_forma.31_mar_26_plus_qip|currency:millions:1}}) ÷ {{ideaforge.shares_outstanding.post_qip|number:millions:2}} post-QIP shares, on LTM revenue of {{ideaforge.revenue.ltm_jun26|currency:millions:1}} and LTM EBITDA ex-other income of {{ideaforge.ebitda_ex_other_income.ltm_jun26|currency:millions:1}}. Peer ranges = min–max of the three Indian peers."
+    }
+  ],
+  "language": "en-GB"
+}

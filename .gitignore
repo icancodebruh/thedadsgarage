@@ -23,3 +23,6 @@ templates/*.potx
 
 # Generated facts (rebuild with `deckforge ingest`)
 examples/*/facts*.json
+
+# Source decks used as inputs (rebuild facts with examples/*/extract_facts.py)
+examples/*/source/

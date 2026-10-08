@@ -10,11 +10,11 @@ from deckforge.build.slide_types.base import (
     add_text,
     data_frame,
     find_placeholder,
+    footnote_text,
     place,
     remove_empty_placeholders,
     set_paragraphs,
     set_title,
-    source_footnote,
 )
 from deckforge.spec.models import ExecSummarySlide
 
@@ -25,7 +25,7 @@ class ExecSummarySlideType:
     def render(self, slide: Slide, spec: ExecSummarySlide, ctx: BuildContext) -> None:
         set_title(slide, spec.title, spec.layout_id)
         bullets = [ctx.text(b) for b in spec.bullets]
-        body_box = data_frame(slide, ctx, units=None)
+        body_box = data_frame(slide, ctx, None, footnote_text(ctx, spec.fact_refs()))
         body = find_placeholder(slide, PP_PLACEHOLDER.BODY, PP_PLACEHOLDER.OBJECT)
         if body is not None:
             # Keep the layout's bullet styling; pin geometry so the footnote zone stays clear.
@@ -34,4 +34,3 @@ class ExecSummarySlideType:
         else:
             add_text(slide, body_box, bullets, ctx.tokens.body)
         remove_empty_placeholders(slide)
-        source_footnote(slide, ctx)

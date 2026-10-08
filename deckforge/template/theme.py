@@ -100,10 +100,14 @@ class TextStyleResolver:
             return chain
         assert shape is not None
         idx = shape.placeholder_format.idx
-        layout_ph = _find_ph(layout.placeholders, idx, ph_type) if layout is not None else None
+        layout_ph = (
+            find_matching_placeholder(layout.placeholders, idx, ph_type)
+            if layout is not None
+            else None
+        )
         if layout_ph is not None:
             chain.extend(xpath(layout_ph.element, "p:txBody/a:lstStyle"))
-        master_ph = _find_ph(self._master.placeholders, None, ph_type)
+        master_ph = find_matching_placeholder(self._master.placeholders, None, ph_type)
         if master_ph is not None:
             chain.extend(xpath(master_ph.element, "p:txBody/a:lstStyle"))
         style = (
@@ -180,7 +184,9 @@ def _ph_type(shape: BaseShape | None) -> PP_PLACEHOLDER | None:
     return shape.placeholder_format.type
 
 
-def _find_ph(placeholders: object, idx: int | None, ph_type: PP_PLACEHOLDER) -> BaseShape | None:
+def find_matching_placeholder(
+    placeholders: object, idx: int | None, ph_type: PP_PLACEHOLDER
+) -> BaseShape | None:
     """Match a placeholder by idx first, then by type (title types are interchangeable)."""
     candidates = list(placeholders)  # type: ignore[call-overload]
     if idx is not None:

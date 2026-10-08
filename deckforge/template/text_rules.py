@@ -12,7 +12,7 @@ from deckforge.template.models import CaseRule, TextRules
 MINOR_WORDS = frozenset(
     {
         "a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "into",
-        "nor", "of", "on", "or", "per", "the", "to", "vs", "via", "with",
+        "nor", "of", "on", "or", "per", "the", "to", "vs", "via", "with", "cont'd",
     }
 )  # fmt: skip
 _WORD = re.compile(r"[A-Za-z][A-Za-z'\u2019\-]*")
@@ -63,7 +63,7 @@ def to_title_case(title: str) -> str:
     words = title.split(" ")
     out: list[str] = []
     for i, word in enumerate(words):
-        core = word.strip("(\"'")
+        core = word.strip("()\"'")
         if not core or _is_acronym(core) or not core[0].isalpha():
             out.append(word)
         elif i > 0 and core.lower() in MINOR_WORDS and not words[i - 1].endswith(":"):

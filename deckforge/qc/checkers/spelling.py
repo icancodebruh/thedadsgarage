@@ -17,14 +17,14 @@ IGNORED_RULES = frozenset(
 )
 
 
-def _tool() -> Any:
+def _tool(language: str) -> Any:
     module = importlib.import_module("language_tool_python")
-    return module.LanguageTool("en-US")
+    return module.LanguageTool(language)
 
 
 def check(ctx: QCContext) -> list[Issue]:
     try:
-        tool = _tool()
+        tool = _tool(ctx.spec.language)
     except Exception as exc:  # missing package, Java, or network for the LT download
         return [
             Issue(
@@ -34,6 +34,9 @@ def check(ctx: QCContext) -> list[Issue]:
                 message=f"spell/grammar check skipped: {type(exc).__name__}: {exc}",
             )
         ]
+    # Names the deck already declares (glossary, company names) are not misspellings.
+    known = {w.lower() for term in ctx.spec.glossary for w in term.split()}
+    known |= {w.lower() for f in ctx.facts.facts for w in re.split(r"[\s()]+", f.entity) if w}
     issues: list[Issue] = []
     try:
         for n, slide in ctx.slides():
@@ -44,7 +47,7 @@ def check(ctx: QCContext) -> list[Issue]:
                     if match.rule_id in IGNORED_RULES:
                         continue
                     word = text[match.offset : match.offset + match.error_length]
-                    if NUMERIC.search(word):
+                    if NUMERIC.search(word) or word.lower() in known:
                         continue
                     # Capitalised "misspellings" are company names, tickers and acronyms.
                     if match.rule_issue_type == "misspelling" and word[:1].isupper():

@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from deckforge.ingest.models import FactSet
 from deckforge.qc.checkers import ties
+from deckforge.spec.models import DeckSpec, FinancialTableSlide
 from tests.qc.conftest import MakeCtx
 
 
@@ -31,3 +32,17 @@ def test_ratio_that_does_not_tie(make_ctx: MakeCtx) -> None:
     ctx = make_ctx()
     ctx.facts = _with_value(ctx.facts, "testco.gross_margin.fy2025", "0.65")
     assert any("Gross Profit / Revenue" in i.message for i in ties.check(ctx))
+
+
+def test_literal_cells_are_skipped(make_ctx: MakeCtx) -> None:
+    def edit(spec: DeckSpec) -> DeckSpec:
+        slides = list(spec.slides)
+        table = slides[3]
+        assert isinstance(table, FinancialTableSlide)
+        rows = [
+            r.model_copy(update={"cells": ["n.a."]}) if r.label == "COGS" else r for r in table.rows
+        ]
+        slides[3] = table.model_copy(update={"rows": rows})
+        return spec.model_copy(update={"slides": slides})
+
+    assert ties.check(make_ctx(spec_edit=edit)) == []

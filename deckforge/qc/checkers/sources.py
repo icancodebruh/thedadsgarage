@@ -18,6 +18,9 @@ NON_DATA = [
         r"\b(?:January|February|March|April|May|June|July|August|September|October|November"
         r"|December)\s+\d{1,2},\s+\d{4}\b"
     ),
+    re.compile(r"\b\d{1,2}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2,4}\b"),
+    re.compile(r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2,4}\b"),
+    re.compile(r"\b(?:Q[1-4]|H[12]|[1-9]M)\b"),
     re.compile(r"\b(?:19|20)\d{2}[AEP]?\b"),
     re.compile(r"^\(\d\)|\(\d\)$", re.MULTILINE),
 ]
@@ -36,6 +39,7 @@ def check(ctx: QCContext) -> list[Issue]:
                     message=f"'{b.text}' has no source_ref",
                 )
             )
+    glossary = sorted(ctx.spec.glossary, key=len, reverse=True)
     for n, slide in ctx.slides():
         spec_type = ctx.spec.slides[n - 1].slide_type if n <= len(ctx.spec.slides) else None
         bound = sorted({b.text for b in ctx.manifest.for_slide(n)}, key=len, reverse=True)
@@ -54,8 +58,9 @@ def check(ctx: QCContext) -> list[Issue]:
             if text.strip().startswith(SOURCE_PREFIX):
                 continue
             remaining = text
-            for value in bound:
-                remaining = remaining.replace(value, " ")
+            for value in [*bound, *glossary]:
+                # Whole tokens only: a bound "200" must not erase part of "2007".
+                remaining = re.sub(rf"(?<![\w.,]){re.escape(value)}(?![\w]|[.,]\d)", " ", remaining)
             for pattern in NON_DATA:
                 remaining = pattern.sub(" ", remaining)
             if DIGIT.search(remaining):

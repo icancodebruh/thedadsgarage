@@ -15,6 +15,8 @@ FACT_ID_PATTERN = r"^[a-z0-9][a-z0-9_.\-]*$"
 class Unit(StrEnum):
     USD = "USD"
     USD_PER_SHARE = "USD_per_share"
+    INR = "INR"
+    INR_PER_SHARE = "INR_per_share"
     PERCENT = "percent"  # stored as a fraction: 0.25 == 25%
     RATIO = "ratio"  # multiples, e.g. EV / EBITDA
     SHARES = "shares"

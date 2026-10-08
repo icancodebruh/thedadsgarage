@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -273,32 +274,82 @@ def section_header(slide: Slide, box: Box, text: str, tokens: StyleTokens) -> Sh
 GAP_IN = 0.1
 
 
-def data_frame(slide: Slide, ctx: BuildContext, units: str | None) -> Box:
-    """Draw the units line; return the body box left between it and the footnote zone.
+FOOTNOTE_LINE = 1.3  # footnote line height as a multiple of its font size
+AVG_CHAR_EM = 0.5  # average glyph width, used to estimate how many lines text wraps to
 
-    Call `source_footnote` after the body is rendered, so it lists the sources used.
+
+COMPILED_FROM = re.compile(r"^(?P<body>.*?)\s*\[(?P<doc>[^\]]+?), p\.(?P<page>\d+)\]$")
+
+
+def citations(source_refs: list[str]) -> tuple[list[str], dict[str, set[int]]]:
+    """Split source refs into unique citations, plus pages of any compiled document.
+
+    A ref may end with "[<document>, p.<n>]" when the fact was taken from a compiled
+    document (an existing deck) that itself cites the underlying source.
     """
+    items: list[str] = []
+    pages: dict[str, set[int]] = {}
+    for ref in source_refs:
+        m = COMPILED_FROM.match(ref)
+        body = ref
+        if m:
+            body = m["body"]
+            pages.setdefault(m["doc"], set()).add(int(m["page"]))
+        parts: list[str] = []
+        for part in (x.strip() for x in body.split("; ")):
+            if parts and part[:1].isdigit():  # "...: 6.29m shares; 49.69m post-issue"
+                parts[-1] += f", {part}"
+            elif part:
+                parts.append(part)
+        items += [x.rstrip(".") for x in parts if x.rstrip(".") not in items]
+    # Drop a citation that a fuller one already covers ("QIP filing" vs "QIP filing: ...").
+    items = [x for x in items if not any(o != x and o.startswith(x) for o in items)]
+    return items, pages
+
+
+def footnote_text(ctx: BuildContext, refs: list[str], note: str | None = None) -> str:
+    """'Source: ...' for every fact the slide uses, plus an optional methodology note.
+
+    Sources come from the slide's fact references up front, so the footnote can be
+    sized before the body is laid out.
+    """
+    parts: list[str] = []
+    if refs:
+        items, pages = citations([f.source_ref for f in ctx.facts.require(refs)])
+        parts.append("Source: " + "; ".join(sorted(items)) + ".")
+        for doc, nums in sorted(pages.items()):
+            listed = ", ".join(str(n) for n in sorted(nums))
+            parts.append(f"Compiled from the {doc} (p. {listed}).")
+    if note:
+        parts.append("Note: " + ctx.text(note))
+    return " ".join(parts)
+
+
+def footnote_height(ctx: BuildContext, text: str) -> float:
+    if not text:
+        return 0.0
+    size_in = ctx.tokens.footnote.size_pt / 72
+    chars_per_line = max(1, int(ctx.tokens.content_box.w / (size_in * AVG_CHAR_EM)))
+    lines = -(-len(text) // chars_per_line)
+    return lines * size_in * FOOTNOTE_LINE + 0.02
+
+
+def data_frame(slide: Slide, ctx: BuildContext, units: str | None, footnote: str = "") -> Box:
+    """Draw the units line (top) and footnote (bottom); return the body box between them."""
     cb = ctx.tokens.content_box
     top = cb.y
     if units:
         line_h = line_height_in(ctx.tokens.footnote.size_pt)
         add_text(slide, Box(x=cb.x, y=cb.y, w=cb.w, h=line_h), units, ctx.tokens.footnote)
         top += line_h + GAP_IN
-    bottom = cb.y + cb.h - footnote_height(ctx) - GAP_IN
+    bottom = cb.y + cb.h
+    if footnote:
+        h = footnote_height(ctx, footnote)
+        add_text(
+            slide,
+            Box(x=cb.x, y=round(bottom - h, 3), w=cb.w, h=round(h, 3)),
+            footnote,
+            ctx.tokens.footnote,
+        )
+        bottom -= h + GAP_IN
     return Box(x=cb.x, y=round(top, 3), w=cb.w, h=round(bottom - top, 3))
-
-
-def footnote_height(ctx: BuildContext) -> float:
-    return line_height_in(ctx.tokens.footnote.size_pt) * 2
-
-
-def source_footnote(slide: Slide, ctx: BuildContext, extra: list[str] | None = None) -> None:
-    sources = ctx.sources_on_slide()
-    if not sources:
-        return
-    cb = ctx.tokens.content_box
-    h = footnote_height(ctx)
-    lines = ["Source: " + "; ".join(sources), *(extra or [])]
-    add_text(
-        slide, Box(x=cb.x, y=cb.y + cb.h - h, w=cb.w, h=h), " ".join(lines), ctx.tokens.footnote
-    )

@@ -14,9 +14,9 @@ def test_bullets_render_fact_tokens(full_inputs: Path) -> None:
     texts = [s.text_frame.text for s in slide.shapes if s.has_text_frame]
     body = next(t for t in texts if t.startswith("Revenue"))
     assert body.split("\n") == [
-        "Revenue reached $1.25B in FY2025",
+        "Revenue reached $1.25bn in FY2025",
         "Testco trades at 9.5x LTM EBITDA",
     ]
-    assert f"Source: {TEST_SOURCE}" in texts
+    assert f"Source: {TEST_SOURCE}." in texts
     bound = {b.text for b in load_manifest(deck).for_slide(2)}
-    assert bound == {"$1.25B", "9.5x"}
+    assert bound == {"$1.25bn", "9.5x"}

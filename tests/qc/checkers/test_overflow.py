@@ -11,8 +11,13 @@ def test_clean_deck_passes(make_ctx: MakeCtx) -> None:
 
 
 def test_text_too_long_for_box(make_ctx: MakeCtx) -> None:
-    ctx = make_ctx(lambda prs: add_box(prs, 2, "word " * 200, size=18, h=0.4))
+    ctx = make_ctx(lambda prs: add_box(prs, 2, "word " * 200, size=18, h=0.4, wrap=True))
     assert any("needs" in i.message for i in overflow.check(ctx))
+
+
+def test_unwrapped_text_too_wide(make_ctx: MakeCtx) -> None:
+    ctx = make_ctx(lambda prs: add_box(prs, 2, "word " * 40, size=18, h=0.4))
+    assert any("unwrapped" in i.message for i in overflow.check(ctx))
 
 
 def test_shape_off_slide(make_ctx: MakeCtx) -> None:

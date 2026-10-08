@@ -36,7 +36,8 @@ def check(ctx: QCContext) -> list[Issue]:
     decimals: dict[str, set[str]] = defaultdict(set)
     for b in ctx.manifest.bindings:
         kind, scale, dp = b.format_key.split("/")
-        decimals[f"{kind}/{scale}"].add(dp)
+        group = f"{kind}/{scale}" if kind in ("currency", "number") else kind
+        decimals[group].add(dp)
     for group, dps in sorted(decimals.items()):
         if len(dps) > 1:
             issues.append(

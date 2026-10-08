@@ -9,6 +9,8 @@ from deckforge.template.text_rules import classify_title, to_sentence_case, to_t
 
 NAME = "casing"
 MIN_CONFIDENCE = 0.6  # only enforce a rule the reference deck follows consistently
+# A final period that belongs to an abbreviation is not a sentence-ending period.
+ABBREVIATIONS = ("Ltd.", "Inc.", "Co.", "Corp.", "Bros.", "S.A.", "N.V.", "Pvt.")
 
 
 def check(ctx: QCContext) -> list[Issue]:
@@ -23,7 +25,11 @@ def check(ctx: QCContext) -> list[Issue]:
                 fixed = to_title_case(fixed)
             elif rules.title_case is CaseRule.SENTENCE and got in (CaseRule.TITLE, CaseRule.MIXED):
                 fixed = to_sentence_case(fixed)
-        if not rules.title_trailing_period and fixed.endswith("."):
+        if (
+            not rules.title_trailing_period
+            and fixed.endswith(".")
+            and not fixed.endswith(ABBREVIATIONS)
+        ):
             fixed = fixed.rstrip(".")
         if fixed != title:
             issues.append(
